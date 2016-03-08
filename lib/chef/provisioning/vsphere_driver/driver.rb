@@ -500,6 +500,26 @@ module ChefProvisioningVsphere
       end
     end
 
+    def create_additional_disk(datastore, size)
+      size = size.to_i
+      next if size == 0
+      if datastore.to_s.empty?
+        raise ':additional_disk_datastore must be specified when adding disks to a cloned vm'
+      end
+      task = vm.ReconfigVM_Task(
+        spec: RbVmomi::VIM.VirtualMachineConfigSpec(
+          deviceChange: [
+            vsphere_helper.virtual_disk_for(
+              vm,
+              datastore,
+              size
+            )
+          ]
+        )
+      )
+      task.wait_for_completion
+    end
+
     def clone_vm(action_handler, bootstrap_options, machine_name)
       vm_template = vm_template_for(bootstrap_options)
 
@@ -516,29 +536,26 @@ module ChefProvisioningVsphere
 
       vm = vsphere_helper.find_vm(vm_folder, machine_name)
 
+      additional_disk_datastore = bootstrap_options[:additional_disk_datastore]
       additional_disk_size_gb = bootstrap_options[:additional_disk_size_gb]
-      if !additional_disk_size_gb.is_a?(Array)
-        additional_disk_size_gb = [additional_disk_size_gb]
-      end        
 
-      additional_disk_size_gb.each do |size|
-        size = size.to_i
-        next if size == 0
-        if bootstrap_options[:datastore].to_s.empty? 
-          raise ':datastore must be specified when adding a disk to a cloned vm'
+      if !additional_disk_datastore.is_a?(Array)
+        additional_disk_datastore = [additional_disk_datastore]
+        if !additional_disk_size_gb.is_a?(Array)
+          additional_disk_size_gb = [additional_disk_size_gb]
         end
-        task = vm.ReconfigVM_Task(
-          spec: RbVmomi::VIM.VirtualMachineConfigSpec(
-            deviceChange: [
-              vsphere_helper.virtual_disk_for(
-                vm,
-                bootstrap_options[:datastore],
-                size
-              )
-            ]
-          )
-        )
-        task.wait_for_completion
+      end
+
+      _added_disk_ds_count = additional_disk_datastore.length 
+      _added_disk_count = additional_disk_size_gb.length 
+      if _added_disk_ds_count != _added_disk_count
+        raise ("Inconsistency in added disk datastores and added disk size arrays.  Please make sure that you have a datastore specified for every additional disk")
+      end
+      
+      _diskloop = 0
+      additional_disk_size_gb.each do |size|
+        create_additional_disk(additional_disk_datastore[_diskloop],size)
+        _diskloop += 1
       end
 
       vm

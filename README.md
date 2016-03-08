@@ -78,13 +78,14 @@ This will use chef-zero and needs no chef server (only works for ssh). Note that
 - `[:template_name]` - path to vmware template (can be template or a shutown vm) (*required*)
 - `[:template_folder]` - path to a folder containing the template (do not use if template is in the root vm folder)
 - `[:vm_folder]` - path to a folder where the machine will be created.
-- `[:datastore]` - name of datastore to use
+- `[:datastore]` - name of primary disk datastore to use
 - `[:num_cpus]` -  number of cpus to allocate to machine
 - `[:network_name]` - array of network names to use. A NIC will be added for each
 - `[:memory_mb]` - number of megabytes to allocate for machine
 - `[:host]` - `{cluster}`/`{host}` to use during provisioning
 - `[:resource_pool]` - `{cluster}`/`{resource pool}` to use during provisioning
-- `[:additional_disk_size_gb]` - an array of numbers, each signifying the number of gigabytes to assign to an additional disk (*his requires a datastore to be specified*)
+- `[:additional_disk_datastore]` - an array of strings, each corresponding to the additional_disk_size_gb values.  For each additional disk, you must specify what datastore to create it with (*This requires additional_disks to be specified*)
+- `[:additional_disk_size_gb]` - an array of numbers, each signifying the number of gigabytes to assign to an additional disk (*This requires a datastore to be specified*)
 - `[:ssh][:user]` user to use for ssh/winrm (defaults to root on linux/administrator on windows)
 - `[:ssh][:password]` - password to use for ssh/winrm
 - `[:ssh][:paranoid]` - specifies the strictness of the host key verification checking
