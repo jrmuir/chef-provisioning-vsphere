@@ -501,11 +501,6 @@ module ChefProvisioningVsphere
     end
 
     def create_additional_disk(datastore, size)
-      size = size.to_i
-      next if size == 0
-      if datastore.to_s.empty?
-        raise ':additional_disk_datastore must be specified when adding disks to a cloned vm'
-      end
       task = vm.ReconfigVM_Task(
         spec: RbVmomi::VIM.VirtualMachineConfigSpec(
           deviceChange: [
